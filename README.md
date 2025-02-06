@@ -8,6 +8,7 @@ The **User Backup Script** is a two-part solution designed to back up a Windows 
    - The batch file (`_userbackup.bat`) prompts for a username and a backup server choice (Boulder or Hawaii).
    - It verifies that the profile exists in **C:\Users\[Username]**.
    - It copies key folders (Desktop, Documents, Downloads, Favorites, Links, Pictures, Videos) from **C:\Users\[Username]** into a local backup folder (`[ScriptFolder]\[Username]\Desktop_Backup`).
+   - It copies any other file or folder into Root_Files
    - It creates a temporary exclusion file using the exclusion strings defined in **settings.json** so that any folder whose path contains `"YOUR COMPANY NAME FOR SHAREPOINT SYNCS"` or `"OneDrive"` is skipped.
 
 2. **Compression:**
