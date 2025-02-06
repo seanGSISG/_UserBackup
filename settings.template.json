@@ -1,0 +1,18 @@
+{
+  "backupLocations": {
+    "Boulder": "\\\\YOUR.SERVER.IP\\Usershares\\User_Backup",
+    "Hawaii": "\\\\YOUR.SERVER.IP\\UserBackup"
+  },
+  "excludeStrings": [
+    "YOUR COMPANY NAME FOR SHAREPOINT SYNCS",
+    "OneDrive"
+  ],
+  "sevenZipOptions": {
+    "archiveFormat": "7z",
+    "compressionLevel": "mx9",
+    "compressionMethod": "LZMA2",
+    "dictionarySize": "256m",
+    "wordSize": "256",
+    "solidMode": "off"
+  }
+}
