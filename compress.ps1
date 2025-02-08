@@ -1,5 +1,7 @@
 param (
+    [Parameter(Mandatory=$true)]
     [string]$userName,
+    [Parameter(Mandatory=$true)]
     [string]$backupOption
 )
 
@@ -92,13 +94,17 @@ $sevenZipOptions = $settings.sevenZipOptions
 $compressCommand = "& `"$sevenZip`" a -t$($sevenZipOptions.archiveFormat) -$($sevenZipOptions.compressionLevel) -m0=$($sevenZipOptions.compressionMethod) -md=$($sevenZipOptions.dictionarySize) -mfb=$($sevenZipOptions.wordSize) -ms=$($sevenZipOptions.solidMode) -mmt=$($sevenZipOptions.multiThreading) `"$archiveFile`" `"$desktopFiles`""
 Write-Log "7-Zip command: $compressCommand"
 
+# Start the compression process and measure elapsed time
 Write-Log "Starting compression process..."
+$compressionTimer = [System.Diagnostics.Stopwatch]::StartNew()
 try {
     Invoke-Expression $compressCommand
+    $compressionTimer.Stop()
     if (-not (Test-Path $archiveFile)) {
         throw "7-Zip failed to create the .7z archive."
     }
     Write-Log "Compression completed successfully for user '$userName'. Archive created at '$archiveFile'."
+    Write-Log "Compression took $($compressionTimer.Elapsed.ToString())."
 } catch {
     Write-Log "Error during compression: $_" "ERROR"
     exit 1
@@ -150,8 +156,10 @@ $robocopyArgs = @(
 Write-Log "Starting file transfer using Robocopy..."
 Write-Log "Running: robocopy `"$archiveDir`" `"$destinationFolder`" `"$archiveName`" /NP /ETA /NFL /NDL"
 
-# Start the robocopy process and wait for it to complete
+# Start the file transfer process and measure elapsed time
+$fileTransferTimer = [System.Diagnostics.Stopwatch]::StartNew()
 $robocopyProcess = Start-Process -FilePath "robocopy" -ArgumentList $robocopyArgs -NoNewWindow -Wait -PassThru
+$fileTransferTimer.Stop()
 
 # Robocopy returns an exit code; codes below 8 are generally considered successful.
 if ($robocopyProcess.ExitCode -ge 8) {
@@ -159,6 +167,7 @@ if ($robocopyProcess.ExitCode -ge 8) {
     exit 1
 } else {
     Write-Log "File transfer completed successfully using Robocopy."
+    Write-Log "File transfer took $($fileTransferTimer.Elapsed.ToString())."
 }
 
 Write-Log "Compression and backup process completed successfully."
