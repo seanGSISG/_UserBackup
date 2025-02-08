@@ -12,7 +12,8 @@
         "compressionLevel": "mx9",
         "compressionMethod": "LZMA2",
         "dictionarySize": "512m",
-        "wordSide": "64",
-        "solidMode": "off"
+        "wordSize": "64",
+        "solidMode": "off",
+        "multiThreading": "on"
     }
 }
