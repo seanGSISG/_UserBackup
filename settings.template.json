@@ -1,18 +1,18 @@
 {
-  "backupLocations": {
-    "Boulder": "\\\\YOUR.SERVER.IP\\Usershares\\User_Backup",
-    "Hawaii": "\\\\YOUR.SERVER.IP\\UserBackup"
-  },
-  "excludeStrings": [
-    "YOUR COMPANY NAME FOR SHAREPOINT SYNCS",
-    "OneDrive"
-  ],
-  "sevenZipOptions": {
-    "archiveFormat": "7z",
-    "compressionLevel": "mx9",
-    "compressionMethod": "LZMA2",
-    "dictionarySize": "256m",
-    "wordSize": "256",
-    "solidMode": "off"
-  }
+    "backupLocations": {
+        "Boulder": "\\\\CENSORED\\Usershares\\User_Backup",
+        "Hawaii": "\\\\CENSORED\\UserBackup"
+    },
+    "excludeStrings": [
+        "YOUR COMPANY NAME FOR SHAREPOINT SYNCS",
+        "OneDrive"
+    ],
+    "sevenZipOptions": {
+        "archiveFormat": "xz",  // Use xz format for better compression and multi-threading
+        "compressionLevel": "mx9", 
+        "compressionMethod": "LZMA2",  // Modern LZMA2 algorithm is efficient
+        "dictionarySize": "512m",  // Increase dictionary size to improve compression (For ~16GB RAM)
+        "wordSize": "3",  // Optimize word size for better performance
+        "solidMode": "on"  // Enable solid archiving for better compression efficiency
+    }
 }
