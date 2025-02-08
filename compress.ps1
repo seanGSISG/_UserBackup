@@ -80,19 +80,19 @@ if ($userName.Length -ge 2) {
     $userFolderName = $userName.ToUpper()
 }
 
-# Define the archive file path as Username_Laptop.7z inside the user's folder
-$archiveFile = Join-Path -Path $userFile -ChildPath ("{0}_Laptop.7z" -f $userFolderName)
+# Define the archive file path as Username_Laptop.xz inside the user's folder
+$archiveFile = Join-Path -Path $userFile -ChildPath ("{0}_Laptop.xz" -f $userFolderName)
 
-# Build the 7-Zip compression command using options from settings.json
+# Build the 7-Zip compression command using options from settings.json and enable multi-threading
 $sevenZipOptions = $settings.sevenZipOptions
-$compressCommand = "& `"$sevenZip`" a -t$($sevenZipOptions.archiveFormat) -$($sevenZipOptions.compressionLevel) -m0=$($sevenZipOptions.compressionMethod) -md=$($sevenZipOptions.dictionarySize) -mfb=$($sevenZipOptions.wordSize) -ms=$($sevenZipOptions.solidMode) `"$archiveFile`" `"$desktopFiles`""
+$compressCommand = "& `"$sevenZip`" a -t$($sevenZipOptions.archiveFormat) -$($sevenZipOptions.compressionLevel) -m0=$($sevenZipOptions.compressionMethod) -md=$($sevenZipOptions.dictionarySize) -mfb=32 -ms=$($sevenZipOptions.solidMode) -mmt=4 `"$archiveFile`" `"$desktopFiles`""
 Write-Log "Running the 7-Zip command:"
 Write-Log $compressCommand
 
 try {
     Invoke-Expression $compressCommand
     if (-not (Test-Path $archiveFile)) {
-        throw "7-Zip failed to create the .7z archive."
+        throw "7-Zip failed to create the .xz archive."
     }
     Write-Log "Compression completed successfully for user '$userName'. Archive created at '$archiveFile'."
 } catch {
@@ -124,7 +124,7 @@ if (-not (Test-Path $destinationFolder)) {
     Write-Log "Destination folder '$destinationFolder' already exists."
 }
 
-# Copy the .7z archive to the destination folder
+# Copy the .xz archive to the destination folder
 try {
     Copy-Item -Path $archiveFile -Destination $destinationFolder -Force
     Write-Log "Archive '$archiveFile' successfully copied to '$destinationFolder'."
