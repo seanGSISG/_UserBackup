@@ -8,11 +8,10 @@
         "OneDrive"
     ],
     "sevenZipOptions": {
-        "archiveFormat": "xz",  // Use xz format for better compression and multi-threading
-        "compressionLevel": "mx9", 
-        "compressionMethod": "LZMA2",  // Modern LZMA2 algorithm is efficient
-        "dictionarySize": "512m",  // Increase dictionary size to improve compression (For ~16GB RAM)
-        "wordSize": "3",  // Optimize word size for better performance
-        "solidMode": "on"  // Enable solid archiving for better compression efficiency
+        "archiveFormat": "xz",  // Use xz format for better compression
+        "compressionLevel": "mx9",
+        "compressionMethod": "LZMA2",
+        "dictionarySize": "512m",
+        "solidMode": "on"
     }
 }
