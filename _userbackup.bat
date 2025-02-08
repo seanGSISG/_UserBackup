@@ -1,148 +1,96 @@
 @echo off
-setlocal enabledelayedexpansion
+setlocal
 
-:: ** Enhanced User Backup Script (version 2.0) **
-:: This script backs up a user profile from C:\Users\$Username$ 
-:: and compresses it using 7-Zip before copying to a remote server.
+:: Define full path for the exclude file
+set "EXCLUDEFILE=%~dp0exclude.txt"
 
-:: ** Configuration Settings ** 
-set "settingsFile=settings.json"
-set "logFile=%~dp0\user_backup_log_%DATE%-%TIME%.txt"
+:: Create temporary exclusion file by reading settings.json using PowerShell
+powershell -Command "Get-Content '%~dp0settings.json' | ConvertFrom-Json | Select-Object -ExpandProperty excludeStrings | Out-File -Encoding ASCII '%EXCLUDEFILE%'"
 
-:: ** Backup Directories **
-set "backupDir=%~dp0\%username%"
-set "rootFilesDir=%backupDir%\Root_Files"
-set "pstDir=%backupDir%\PST"
+set "filesCopied=0"
+set "pstCopied=0"
 
-:: ** Exclude Folders (read from settings.json) **
-:: Note: This will be populated dynamically based on settings.json
-
-:: ** Initialize Logging **
-echo Starting backup process at %time% > "%logFile%"
-if not exist "%logFile%" (
-    echo Failed to create log file. exiting...
-    pause
-    exit /b 1
+:UsernameCheck
+set /P username=Enter Username: 
+if exist "C:\Users\%username%" (
+    goto :BackupSelection
+) else (
+    echo Username does not exist. Please try again.
+    goto :UsernameCheck
 )
 
-:: ** Validate Required Tools and Dependencies **
-where robocopy >nul 2>&1
-if %ERRORLEVEL% neq 0 (
-    echo Robocopy is not found. Please ensure it is installed (it comes with Windows).
-    pause
-    exit /b 1
+:BackupSelection
+set /P backupOption=Choose backup server: (B)oulder or (H)awaii: 
+:: Normalize to the first character (upper-case)
+set backupOption=%backupOption:~0,1%
+if /I "%backupOption%"=="B" (
+    echo Boulder Server selected.
+) else if /I "%backupOption%"=="H" (
+    echo Hawaii Server selected.
+) else (
+    echo Invalid choice. Defaulting to Boulder Server.
+    set backupOption=B
 )
 
-:: ** Read Username and Backup Option from Input **
-set /p "username=Enter the username to backup: "
-set /p "backupOption=Select backup server (B for Boulder, H for Hawaii): "
+:BackupPreparation
+set "backupDir=%~dp0%username%\Desktop_Backup"
+if not exist "%backupDir%" mkdir "%backupDir%"
 
-:: ** Validate Input Parameters **
-if not defined username (
-    echo No username provided. Exiting...
-    pause
-    exit /b 1
-)
+set "folders[0]=Desktop"
+set "folders[1]=Documents"
+set "folders[2]=Downloads"
+set "folders[3]=Favorites"
+set "folders[4]=Links"
+set "folders[5]=Pictures"
+set "folders[6]=Videos"
 
-if "%backupOption%" not in ("B","H") (
-    echo Invalid backup option. Please enter B or H.
-    pause
-    exit /b 1
-)
-
-:: ** Function to Copy Folders **
-:CopyFolder "%%currentFolder%%"
-echo Copying files from %%currentFolder%%
-robocopy "C:\Users\%username%\%%currentFolder%%" "%backupDir%\%%currentFolder%%" /mov /minfreespace:10MB /log+:"%logFile%" >nul
-if %ERRORLEVEL% neq 0 (
-    echo Failed to copy files from %%currentFolder%%
-    exit /b 1
-)
-goto :EOF
-
-:: ** Function to Copy Root Files and Folders **
-:CopyRootFiles
-echo Copying root files...
-robocopy "C:\Users\%username%" "%rootFilesDir%" /mov /minfreespace:10MB /xf *.7z *.log *.tmp /log+:"%logFile%" >nul
-if %ERRORLEVEL% neq 0 (
-    echo Failed to copy root files.
-    exit /b 1
-)
-goto :EOF
-
-:: ** Function to Copy PST Files **
-:CopyPSTFiles
-echo Copying PST files...
-robocopy "C:\Users\%username%\AppData\Local\Microsoft\Outlook" "%pstDir%" /mov /minfreespace:10MB /xf *. pst /log+:"%logFile%" >nul
-if %ERRORLEVEL% neq 0 (
-    echo Failed to copy PST files.
-    exit /b 1
-)
-goto :EOF
-
-:: ** Read Exclude Strings from settings.json (Optional)**
-if exist "%settingsFile%" (
-    powershell -command "& { $settings = Get-Content '%settingsFile%' | ConvertFrom-Json; }" >nul 2>&1
-    if %ERRORLEVEL% equ 0 (
-        set "excludeStrings=%settings.excludeStrings%"
+set "index=0"
+:CopyLoop
+if defined folders[%index%] (
+    call set "currentFolder=%%folders[%index%]%%"
+    if exist "C:\Users\%username%\%currentFolder%" (
+        mkdir "%backupDir%\%currentFolder%" >nul 2>&1
+        :: Use /exclude: with the full path (without extra quotes)
+        xcopy /s /i /y "C:\Users\%username%\%currentFolder%" "%backupDir%\%currentFolder%" /exclude:%EXCLUDEFILE% >nul
+        echo Copied %currentFolder% to backup
     ) else (
-        echo Failed to read settings.json. Using default settings.
+        echo No files found in %currentFolder%
     )
-) else (
-    echo Settings file not found. Using default settings.
+    set /a index+=1
+    goto :CopyLoop
 )
 
-:: ** Generate Temporary Exclusion File (if needed) **
-if exist "%settingsFile%" (
-    echo Creating exclusion file...
-    echo|%settingsFile%>"tempExclusion.txt"
-) else (
-    echo Settings file not found. Using default settings.
-)
+:RootFilesCopy
+set "rootFilesDir=%backupDir%\Root_Files"
+if not exist "%rootFilesDir%" mkdir "%rootFilesDir%"
 
-:: ** Main Backup Process **
-echo *********************************************************************************
-echo Starting backup for user "%username%"
-echo ********************************************************************************* >> "%logFile%"
+@rem Copy typical document types from the user profile root
+xcopy /y "C:\Users\%username%\*.docx" "%rootFilesDir%" >nul
+xcopy /y "C:\Users\%username%\*.xlsx" "%rootFilesDir%" >nul
+xcopy /y "C:\Users\%username%\*.pptx" "%rootFilesDir%" >nul
+xcopy /y "C:\Users\%username%\*.pdf" "%rootFilesDir%" >nul
+xcopy /y "C:\Users\%username%\*.doc" "%rootFilesDir%" >nul
+xcopy /y "C:\Users\%username%\*.xls" "%rootFilesDir%" >nul
+xcopy /y "C:\Users\%username%\*.ppt" "%rootFilesDir%" >nul
 
-:: ** Create Backup Directory if it doesn't exist **
-if not exist "%backupDir%" (
-    echo Creating backup directory "%backupDir%"
-    mkdir "%backupDir%" || (echo Failed to create backup directory & exit /b 1)
-)
+:PstFolderCheck
+set "pstDir=%backupDir%\PST"
+if not exist "%pstDir%" mkdir "%pstDir%"
 
-:: ** Copy Key Folders and Files **
-call :CopyFolder "Documents"
-call :CopyFolder "Downloads"
-call :CopyFolder "Pictures"
-call :CopyFolder "Videos"
+:PstCopy
+for /f "tokens=1" %%p in ('xcopy /d /y /s "C:\Users\%username%\*.pst" "%pstDir%" ^| findstr "File(s)"') do set pstCopied=%%p
+if %pstCopied%==0 rmdir /s /q "%pstDir%"
 
-call :CopyRootFiles
-call :CopyPSTFiles
+:ReportSummary
+for /f %%i in ('dir "%backupDir%" /s ^| find "File(s)"') do set filesCopied=%%i
+echo Success: Files copied: %filesCopied%
+echo .pst files found and copied: %pstCopied%
 
-:: ** Compress Backup Data and Copy to Remote Server (call compress.ps1) **
-echo *********************************************************************************
-echo Starting compression and remote backup
-echo ********************************************************************************* >> "%logFile%"
+echo Starting compression...
+:: Pass both username and backup option to the PowerShell script
+PowerShell -executionpolicy bypass -command "& { . '%~dp0compress.ps1' '%username%' '%backupOption%' }"
 
-powershell -file compress.ps1 -userName "%username%" -backupOption "%backupOption%" >nul 2>&1
-if %ERRORLEVEL% neq 0 (
-    echo Compression or remote backup failed.
-    pause
-    exit /b 1
-)
-
-:: ** Success Message **
-echo *********************************************************************************
-echo Backup process completed successfully!
-echo Log file: "%logFile%"
-echo *********************************************************************************
+:: Clean up the temporary exclusion file
+del "%EXCLUDEFILE%"
 pause
-exit /b 0
-
-:: ** Error Handling and Logging Examples (Placeholders) **
-:ErrorHandler
-echo An error occurred at line %ERRORLEVEL%: %
-goto :EOF
-
-:: ** End of Script **
+endlocal
