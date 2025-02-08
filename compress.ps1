@@ -85,7 +85,7 @@ $archiveFile = Join-Path -Path $userFile -ChildPath ("{0}_Laptop.7z" -f $userFol
 
 # Build the 7-Zip compression command using options from settings.json and enable multi-threading
 $sevenZipOptions = $settings.sevenZipOptions
-$compressCommand = "& `"$sevenZip`" a -t$($sevenZipOptions.archiveFormat) -$($sevenZipOptions.compressionLevel) -m0=$($sevenZipOptions.compressionMethod) -md=$($sevenZipOptions.dictionarySize) -mfb=32 -ms=$($sevenZipOptions.solidMode) -mmt=4 `"$archiveFile`" `"$desktopFiles`""
+$compressCommand = "& `"$sevenZip`" a -t$($sevenZipOptions.archiveFormat) -$($sevenZipOptions.compressionLevel) -m0=$($sevenZipOptions.compressionMethod) -md=$($sevenZipOptions.dictionarySize) mfb=$($sevenZipOptions.wordSize) -ms=$($sevenZipOptions.solidMode) -mmt=4 `"$archiveFile`" `"$desktopFiles`""
 Write-Log "Running the 7-Zip command:"
 Write-Log $compressCommand
 
