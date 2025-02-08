@@ -83,11 +83,12 @@ if ($userName.Length -ge 2) {
 # Define the archive file path as Username_Laptop.7z inside the user's folder
 $archiveFile = Join-Path -Path $userFile -ChildPath ("{0}_Laptop.7z" -f $userFolderName)
 
-# Build the 7-Zip compression command using options from settings.json and enable multi-threading
+# Build the 7-Zip compression command using options from settings.json
 $sevenZipOptions = $settings.sevenZipOptions
-$compressCommand = "& `"$sevenZip`" a -t$($sevenZipOptions.archiveFormat) -$($sevenZipOptions.compressionLevel) -m0=$($sevenZipOptions.compressionMethod) -md=$($sevenZipOptions.dictionarySize) mfb=$($sevenZipOptions.wordSize) -ms=$($sevenZipOptions.solidMode) -mmt=4 `"$archiveFile`" `"$desktopFiles`""
+$compressCommand = "& `"$sevenZip`" a -t$($sevenZipOptions.archiveFormat) -$($sevenZipOptions.compressionLevel) -m0=$($sevenZipOptions.compressionMethod) -md=$($sevenZipOptions.dictionarySize) -mfb=$($sevenZipOptions.wordSize) -ms=$($sevenZipOptions.solidMode) -mmt=$($sevenZipOptions.multiThreading) `"$archiveFile`" `"$desktopFiles`""
 Write-Log "Running the 7-Zip command:"
 Write-Log $compressCommand
+
 
 try {
     Invoke-Expression $compressCommand
