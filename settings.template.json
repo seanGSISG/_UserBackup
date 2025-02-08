@@ -14,6 +14,6 @@
         "dictionarySize": "512m",
         "wordSize": "64",
         "solidMode": "off",
-        "multiThreading": "on"
+        "multiThreading": "off"
     }
 }
