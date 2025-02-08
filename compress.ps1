@@ -9,13 +9,14 @@ if (-not $userName) {
     exit 1
 }
 
-# Define log folder and log file
-$logDir = "C:\Temp"
-if (-not (Test-Path $logDir)) {
-    Write-Host "C:\Temp does not exist. Creating the Temp folder..."
-    New-Item -Path $logDir -ItemType Directory | Out-Null
+# Define log file in the script's directory
+$scriptDir = Split-Path -Parent $PSCommandPath
+$logFile = Join-Path -Path $scriptDir -ChildPath "compression_log.txt"
+
+if (-not (Test-Path $logFile)) {
+    Write-Host "Log file path: $logFile"
 }
-$logFile = "$logDir\compression_log.txt"
+
 
 function Write-Log {
     param ([string]$message)
