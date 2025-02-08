@@ -8,7 +8,7 @@
         "OneDrive"
     ],
     "sevenZipOptions": {
-        "archiveFormat": "xz",  // Use xz format for better compression
+        "archiveFormat": "7z",
         "compressionLevel": "mx9",
         "compressionMethod": "LZMA2",
         "dictionarySize": "512m",
