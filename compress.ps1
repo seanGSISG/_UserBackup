@@ -43,9 +43,18 @@ $desktopFiles = Join-Path -Path $userFile -ChildPath "Desktop_Backup"
 
 # Ensure the Desktop_Backup folder exists before proceeding
 if (-not (Test-Path $desktopFiles)) {
-    Write-Log "Desktop_Backup folder for user '$userName' does not exist. Exiting..."
-    exit 1
+    Write-Log "Desktop_Backup folder for user '$userName' does not exist. Creating it..."
+    try {
+        New-Item -Path $desktopFiles -ItemType Directory -Force | Out-Null
+        Write-Log "Folder '$desktopFiles' created successfully."
+    } catch {
+        Write-Log "Failed to create Desktop_Backup folder: $_"
+        exit 1
+    }
+} else {
+    Write-Log "Desktop_Backup folder already exists."
 }
+
 
 # Define the path to 7-Zip executable
 $sevenZip = "C:\Program Files\7-Zip\7z.exe"
