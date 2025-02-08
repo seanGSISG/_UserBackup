@@ -45,10 +45,10 @@ $archiveFile = Join-Path -Path $userFile -ChildPath ("{0}_Laptop.7z" -f $userFol
 $archiveFolder = Split-Path $archiveFile
 $logFile = Join-Path -Path $archiveFolder -ChildPath "compression_log.txt"
 
-# Optional: Clear any existing log file so you start fresh
+# Clear any existing log file so you start fresh
 if (Test-Path $logFile) { Remove-Item $logFile -Force }
 
-# Improved logging function with timestamps and levels
+# Improved logging function with timestamps and log levels
 function Write-Log {
     param (
          [string]$message,
@@ -86,6 +86,7 @@ if (-not (Test-Path $sevenZip)) {
     }
 }
 
+# Build the 7-Zip compression command using options from settings.json
 Write-Log "Building 7-Zip compression command..."
 $sevenZipOptions = $settings.sevenZipOptions
 $compressCommand = "& `"$sevenZip`" a -t$($sevenZipOptions.archiveFormat) -$($sevenZipOptions.compressionLevel) -m0=$($sevenZipOptions.compressionMethod) -md=$($sevenZipOptions.dictionarySize) -mfb=$($sevenZipOptions.wordSize) -ms=$($sevenZipOptions.solidMode) -mmt=$($sevenZipOptions.multiThreading) `"$archiveFile`" `"$desktopFiles`""
@@ -103,7 +104,7 @@ try {
     exit 1
 }
 
-Write-Log "Determining remote backup server..."
+# Determine backup server based on the backupOption parameter using settings from JSON
 switch ($backupOption.ToUpper()) {
     "B" { $backupServer = $settings.backupLocations.Boulder }
     "H" { $backupServer = $settings.backupLocations.Hawaii }
@@ -111,9 +112,12 @@ switch ($backupOption.ToUpper()) {
 }
 
 Write-Log "Remote backup server determined: $backupServer"
+
+# Build the destination folder path on the remote server (folder named after the user)
 $destinationFolder = Join-Path -Path $backupServer -ChildPath $userFolderName
 Write-Log "Destination folder for remote backup: $destinationFolder"
 
+# Create the destination folder if it does not exist
 if (-not (Test-Path $destinationFolder)) {
     Write-Log "Destination folder does not exist. Creating it..."
     try {
@@ -127,13 +131,34 @@ if (-not (Test-Path $destinationFolder)) {
     Write-Log "Destination folder already exists."
 }
 
-Write-Log "Copying archive to remote backup folder..."
-try {
-    Copy-Item -Path $archiveFile -Destination $destinationFolder -Force
-    Write-Log "Archive copied successfully to '$destinationFolder'."
-} catch {
-    Write-Log "Error copying archive: $_" "ERROR"
+# Use Robocopy to transfer the .7z archive with progress output and ETA.
+# Since Robocopy operates on directories, extract the source directory and file name.
+$archiveDir = Split-Path $archiveFile
+$archiveName = Split-Path $archiveFile -Leaf
+
+# Build robocopy argument list:
+$robocopyArgs = @(
+    $archiveDir,          # Source directory
+    $destinationFolder,   # Destination directory
+    $archiveName,         # File filter (the archive file)
+    "/NP",                # No progress percentage in robocopy's output (keeps output cleaner)
+    "/ETA",               # Show estimated time of arrival
+    "/NFL",               # No file list
+    "/NDL"                # No directory list
+)
+
+Write-Log "Starting file transfer using Robocopy..."
+Write-Log "Running: robocopy `"$archiveDir`" `"$destinationFolder`" `"$archiveName`" /NP /ETA /NFL /NDL"
+
+# Start the robocopy process and wait for it to complete
+$robocopyProcess = Start-Process -FilePath "robocopy" -ArgumentList $robocopyArgs -NoNewWindow -Wait -PassThru
+
+# Robocopy returns an exit code; codes below 8 are generally considered successful.
+if ($robocopyProcess.ExitCode -ge 8) {
+    Write-Log "Robocopy encountered an error. Exit code: $($robocopyProcess.ExitCode)" "ERROR"
     exit 1
+} else {
+    Write-Log "File transfer completed successfully using Robocopy."
 }
 
 Write-Log "Compression and backup process completed successfully."
