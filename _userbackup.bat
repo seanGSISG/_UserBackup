@@ -132,9 +132,6 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-:: ** Cleanup Temporary Files (Optional) **
-del /f /s /q "*.tmp" >> "%logFile%" 2>&1
-
 :: ** Success Message **
 echo *********************************************************************************
 echo Backup process completed successfully!
