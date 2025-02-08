@@ -41,7 +41,7 @@ if ($userName.Length -ge 2) {
 # Define the archive file path as Username_Laptop.7z inside the user's folder
 $archiveFile = Join-Path -Path $userFile -ChildPath ("{0}_Laptop.7z" -f $userFolderName)
 
-# **Set up logging in the same folder as the archive file**
+# Set up logging in the same folder as the archive file
 $archiveFolder = Split-Path $archiveFile
 $logFile = Join-Path -Path $archiveFolder -ChildPath "compression_log.txt"
 
@@ -86,12 +86,12 @@ if (-not (Test-Path $sevenZip)) {
     }
 }
 
-# Build the 7-Zip compression command using options from settings.json
+Write-Log "Building 7-Zip compression command..."
 $sevenZipOptions = $settings.sevenZipOptions
 $compressCommand = "& `"$sevenZip`" a -t$($sevenZipOptions.archiveFormat) -$($sevenZipOptions.compressionLevel) -m0=$($sevenZipOptions.compressionMethod) -md=$($sevenZipOptions.dictionarySize) -mfb=$($sevenZipOptions.wordSize) -ms=$($sevenZipOptions.solidMode) -mmt=$($sevenZipOptions.multiThreading) `"$archiveFile`" `"$desktopFiles`""
-Write-Log "Running the 7-Zip command:"
-Write-Log $compressCommand
+Write-Log "7-Zip command: $compressCommand"
 
+Write-Log "Starting compression process..."
 try {
     Invoke-Expression $compressCommand
     if (-not (Test-Path $archiveFile)) {
@@ -103,37 +103,38 @@ try {
     exit 1
 }
 
-# Determine backup server based on the backupOption parameter using settings from JSON
+Write-Log "Determining remote backup server..."
 switch ($backupOption.ToUpper()) {
     "B" { $backupServer = $settings.backupLocations.Boulder }
     "H" { $backupServer = $settings.backupLocations.Hawaii }
     default { Write-Log "Invalid backup option provided. Skipping remote backup." "ERROR"; exit 1 }
 }
 
-# Build the destination folder path on the remote server (folder named after the user)
+Write-Log "Remote backup server determined: $backupServer"
 $destinationFolder = Join-Path -Path $backupServer -ChildPath $userFolderName
+Write-Log "Destination folder for remote backup: $destinationFolder"
 
-# Create the destination folder if it does not exist
 if (-not (Test-Path $destinationFolder)) {
-    Write-Log "Destination folder '$destinationFolder' does not exist. Creating it..."
+    Write-Log "Destination folder does not exist. Creating it..."
     try {
         New-Item -Path $destinationFolder -ItemType Directory -Force | Out-Null
-        Write-Log "Folder '$destinationFolder' created successfully."
+        Write-Log "Destination folder created successfully."
     } catch {
-        Write-Log "Failed to create folder '$destinationFolder': $_" "ERROR"
+        Write-Log "Failed to create destination folder: $_" "ERROR"
         exit 1
     }
 } else {
-    Write-Log "Destination folder '$destinationFolder' already exists."
+    Write-Log "Destination folder already exists."
 }
 
-# Copy the .7z archive to the destination folder
+Write-Log "Copying archive to remote backup folder..."
 try {
     Copy-Item -Path $archiveFile -Destination $destinationFolder -Force
-    Write-Log "Archive '$archiveFile' successfully copied to '$destinationFolder'."
+    Write-Log "Archive copied successfully to '$destinationFolder'."
 } catch {
-    Write-Log "Error copying the archive: $_" "ERROR"
+    Write-Log "Error copying archive: $_" "ERROR"
     exit 1
 }
 
+Write-Log "Compression and backup process completed successfully."
 exit 0
