@@ -7,10 +7,10 @@ setlocal enabledelayedexpansion
 
 :: ** Configuration Settings ** 
 set "settingsFile=settings.json"
-set "logFile=%TEMP%\user_backup_log_%DATE%-%TIME%.txt"
+set "logFile=%~dp0\user_backup_log_%DATE%-%TIME%.txt"
 
 :: ** Backup Directories **
-set "backupDir=[ScriptFolder]\%username%"
+set "backupDir=%~dp0\%username%"
 set "rootFilesDir=%backupDir%\Root_Files"
 set "pstDir=%backupDir%\PST"
 
