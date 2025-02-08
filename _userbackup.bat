@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 :: ** Enhanced User Backup Script (version 2.0) **
-:: This script backs up a user profile from C:\Users$Username] 
+:: This script backs up a user profile from C:\Users\$Username$ 
 :: and compresses it using 7-Zip before copying to a remote server.
 
 :: ** Configuration Settings ** 
@@ -15,7 +15,7 @@ set "rootFilesDir=%backupDir%\Root_Files"
 set "pstDir=%backupDir%\PST"
 
 :: ** Exclude Folders (read from settings.json) **
-set "excludeStrings=YOUR COMPANY NAME FOR SHAREPOINT SYNCS|OneDrive"
+:: Note: This will be populated dynamically based on settings.json
 
 :: ** Initialize Logging **
 echo Starting backup process at %time% > "%logFile%"
@@ -80,6 +80,26 @@ if %ERRORLEVEL% neq 0 (
 )
 goto :EOF
 
+:: ** Read Exclude Strings from settings.json (Optional)**
+if exist "%settingsFile%" (
+    powershell -command "& { $settings = Get-Content '%settingsFile%' | ConvertFrom-Json; }" >nul 2>&1
+    if %ERRORLEVEL% equ 0 (
+        set "excludeStrings=%settings.excludeStrings%"
+    ) else (
+        echo Failed to read settings.json. Using default settings.
+    )
+) else (
+    echo Settings file not found. Using default settings.
+)
+
+:: ** Generate Temporary Exclusion File (if needed) **
+if exist "%settingsFile%" (
+    echo Creating exclusion file...
+    echo|%settingsFile%>"tempExclusion.txt"
+) else (
+    echo Settings file not found. Using default settings.
+)
+
 :: ** Main Backup Process **
 echo *********************************************************************************
 echo Starting backup for user "%username%"
@@ -99,15 +119,6 @@ call :CopyFolder "Videos"
 
 call :CopyRootFiles
 call :CopyPSTFiles
-
-:: ** Generate Temporary Exclusion File (if needed) **
-if exist "%settingsFile%" (
-    echo Creating exclusion file...
-    rem This is a placeholder for your actual logic to generate the exclusion list.
-    echo Your code here...
-) else (
-    echo Settings file not found. Using default settings.
-)
 
 :: ** Compress Backup Data and Copy to Remote Server (call compress.ps1) **
 echo *********************************************************************************
@@ -134,7 +145,7 @@ exit /b 0
 
 :: ** Error Handling and Logging Examples (Placeholders) **
 :ErrorHandler
-echo An error occurred at line %ERRORLEVEL%: %_
+echo An error occurred at line %ERRORLEVEL%: %
 goto :EOF
 
 :: ** End of Script **
