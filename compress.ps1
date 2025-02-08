@@ -17,7 +17,6 @@ if (-not (Test-Path $logFile)) {
     Write-Host "Log file path: $logFile"
 }
 
-
 function Write-Log {
     param ([string]$message)
     Write-Host $message
@@ -56,21 +55,21 @@ if (-not (Test-Path $sevenZip)) {
     Write-Log "7-Zip not found at $sevenZip. Attempting installation via Chocolatey..."
     $chocoPath = Get-Command choco.exe -ErrorAction SilentlyContinue
     if (-not $chocoPath) {
-         Write-Log "Chocolatey is not installed. Please install Chocolatey and re-run the script."
-         exit 1
+        Write-Log "Chocolatey is not installed. Please install Chocolatey and re-run the script."
+        exit 1
     }
     & choco install 7zip -y | Out-Null
     $maxWait = 60
     $waited = 0
     while (-not (Test-Path $sevenZip) -and $waited -lt $maxWait) {
-         Start-Sleep -Seconds 5
-         $waited += 5
+        Start-Sleep -Seconds 5
+        $waited += 5
     }
     if (-not (Test-Path $sevenZip)) {
-         Write-Log "7-Zip installation failed after waiting for $maxWait seconds. Exiting..."
-         exit 1
+        Write-Log "7-Zip installation failed after waiting for $maxWait seconds. Exiting..."
+        exit 1
     } else {
-         Write-Log "7-Zip successfully installed."
+        Write-Log "7-Zip successfully installed."
     }
 }
 
@@ -81,8 +80,8 @@ if ($userName.Length -ge 2) {
     $userFolderName = $userName.ToUpper()
 }
 
-# Define the archive file path as Username_Laptop.xz inside the user's folder
-$archiveFile = Join-Path -Path $userFile -ChildPath ("{0}_Laptop.xz" -f $userFolderName)
+# Define the archive file path as Username_Laptop.7z inside the user's folder
+$archiveFile = Join-Path -Path $userFile -ChildPath ("{0}_Laptop.7z" -f $userFolderName)
 
 # Build the 7-Zip compression command using options from settings.json and enable multi-threading
 $sevenZipOptions = $settings.sevenZipOptions
@@ -93,7 +92,7 @@ Write-Log $compressCommand
 try {
     Invoke-Expression $compressCommand
     if (-not (Test-Path $archiveFile)) {
-        throw "7-Zip failed to create the .xz archive."
+        throw "7-Zip failed to create the .7z archive."
     }
     Write-Log "Compression completed successfully for user '$userName'. Archive created at '$archiveFile'."
 } catch {
@@ -125,7 +124,7 @@ if (-not (Test-Path $destinationFolder)) {
     Write-Log "Destination folder '$destinationFolder' already exists."
 }
 
-# Copy the .xz archive to the destination folder
+# Copy the .7z archive to the destination folder
 try {
     Copy-Item -Path $archiveFile -Destination $destinationFolder -Force
     Write-Log "Archive '$archiveFile' successfully copied to '$destinationFolder'."
