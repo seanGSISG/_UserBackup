@@ -1,10 +1,10 @@
 {
     "backupLocations": {
-        "Boulder": "\\\\CENSORED\\Usershares\\User_Backup",
-        "Hawaii": "\\\\CENSORED\\UserBackup"
+        "Boulder": "\\\\SERVER\\User_Backup",
+        "Hawaii": "\\\\SERVER\\UserBackup"
     },
     "excludeStrings": [
-        "YOUR COMPANY NAME FOR SHAREPOINT SYNCS",
+        "YOUR COMPANY NAME FOR SHAREPOINT ONEDRIVE SYNCS",
         "OneDrive"
     ],
     "sevenZipOptions": {
