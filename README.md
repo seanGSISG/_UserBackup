@@ -2,6 +2,29 @@
 
 The **User Backup Script** is a two-part solution designed to back up a Windows user profile from **C:\Users\[Username]**. It uses a configuration file (**settings.json**) to centralize settings for remote backup locations, folder exclusion strings, and 7‑Zip compression options.
 
+## How to Use
+
+1. **Download the Scripts:**  
+   Place **settings.json**, **_userbackup.bat**, and **compress.ps1** in the same directory.
+
+2. **Run the Batch File:**  
+   Double-click **_userbackup.bat** to start the process.
+   - **Username Prompt:**  
+     Enter the username (e.g., `JDoe` to back up **C:\Users\JDoe**).
+   - **Backup Server Selection:**  
+     Type `B` for Boulder Server or `H` for Hawaii Server.
+
+3. **Execution:**  
+   - The batch file copies the selected folders to a local backup folder while skipping any excluded directories.
+   - It generates the temporary exclusion file from **settings.json**.
+   - It then calls **compress.ps1** to:
+     - Check for 7‑Zip and install it if needed.
+     - Compress the local backup into an archive named **Username_Laptop.7z**.
+     - Create (if necessary) the destination folder on the remote server and copy the archive there.
+
+4. **Completion:**  
+   Review the on-screen messages and check `C:\Temp\compression_log.txt` for details and any errors.
+
 ## What It Does
 
 1. **User Profile Copying:**
@@ -52,29 +75,6 @@ The **User Backup Script** is a two-part solution designed to back up a Windows 
   - Compresses the local backup folder into an archive named **Username_Laptop.7z**.
   - Creates (if necessary) the destination folder on the selected remote server and copies the archive there.
   - Logs its actions to `C:\Temp\compression_log.txt`.
-
-## How to Use
-
-1. **Download the Scripts:**  
-   Place **settings.json**, **_userbackup.bat**, and **compress.ps1** in the same directory.
-
-2. **Run the Batch File:**  
-   Double-click **_userbackup.bat** to start the process.
-   - **Username Prompt:**  
-     Enter the username (e.g., `JDoe` to back up **C:\Users\JDoe**).
-   - **Backup Server Selection:**  
-     Type `B` for Boulder Server or `H` for Hawaii Server.
-
-3. **Execution:**  
-   - The batch file copies the selected folders to a local backup folder while skipping any excluded directories.
-   - It generates the temporary exclusion file from **settings.json**.
-   - It then calls **compress.ps1** to:
-     - Check for 7‑Zip and install it if needed.
-     - Compress the local backup into an archive named **Username_Laptop.7z**.
-     - Create (if necessary) the destination folder on the remote server and copy the archive there.
-
-4. **Completion:**  
-   Review the on-screen messages and check `C:\Temp\compression_log.txt` for details and any errors.
 
 ## Prerequisites
 
